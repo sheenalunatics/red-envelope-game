@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="เกมสุ่มเปิดซองแดงอั่งเปาจีน - Red Envelope Game">
+    <meta name="keywords" content="red envelope, game, chinese new year, อั่งเปา">
+    <meta name="author" content="Red Envelope Game">
+    <title>เกมสุ่มเปิดซองแดงอั่งเปาจีน</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="settings-screen" class="screen">
+            <h1>เกมสุ่มเปิดซองแดงอั่งเปาจีน</h1>
+            <div class="settings-form">
+                <div class="form-group">
+                    <label for="envelope-count">จำนวนซองแดง:</label>
+                    <input type="number" id="envelope-count" min="1" placeholder="กรอกจำนวนซอง">
+                </div>
+                <div class="form-group">
+                    <label for="min-prize">เงินรางวัลต่ำสุด:</label>
+                    <input type="number" id="min-prize" min="1" placeholder="จำนวนเงินต่ำสุด">
+                </div>
+                <div class="form-group">
+                    <label for="max-prize">เงินรางวัลสูงสุด:</label>
+                    <input type="number" id="max-prize" min="1" placeholder="จำนวนเงินสูงสุด">
+                </div>
+                <div class="form-group">
+                    <button id="start-game-btn" type="button">เริ่มเกม</button>
+                </div>
+                <div id="error-message" class="error-message"></div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <div class="game-stats">
+                    <span id="total-prize" class="stat-item">💰 เงินรวม: 0 บาท</span>
+                    <span id="envelope-stats" class="stat-item">📦 เปิดแล้ว: 0 / 0</span>
+                    <span id="remaining-stats" class="stat-item">⏳ เหลือ: 0 ซอง</span>
+                </div>
+                <div class="game-controls">
+                    <button id="sound-toggle" class="control-btn" title="เปิด/ปิดเสียง">🔊</button>
+                    <button id="new-game-btn" class="control-btn" title="เริ่มเกมใหม่">🎮 เกมใหม่</button>
+                </div>
+            </div>
+            <div id="envelopes-container" class="envelopes-container">
+                <!-- Envelopes will be generated here -->
+            </div>
+            <div id="game-progress" class="game-progress hidden">
+                <div class="progress-label">ความคืบหน้า</div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div id="progress-text" class="progress-text">0%</div>
+            </div>
+        </div>
+
+        <div id="game-end-screen" class="screen hidden">
+            <div class="game-summary">
+                <h2>🎉 สรุปผลการเล่น</h2>
+                <div class="summary-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <div class="stat-label">เงินรวมทั้งหมด</div>
+                            <div id="final-total" class="stat-value">0 บาท</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-content">
+                            <div class="stat-label">จำนวนซองที่เปิด</div>
+                            <div id="final-envelope-count" class="stat-value">0 ซอง</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">เงินรางวัลเฉลี่ย</div>
+                            <div id="average-prize" class="stat-value">0 บาท</div>
+                        </div>
+                    </div>
+                    <p id="completion-message" class="completion-message"></p>
+                </div>
+                <div class="restart-options">
+                    <button id="play-again-btn" class="primary-btn">🎮 เล่นอีกครั้ง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

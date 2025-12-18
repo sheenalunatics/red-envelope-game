@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Test - Red Envelope Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #d32f2f;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #b71c1c;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #e3f2fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧧 Red Envelope Game - Audio System Test</h1>
+        
+        <div class="status" id="audio-status">
+            Audio Status: Initializing...
+        </div>
+        
+        <h3>Test Audio Effects:</h3>
+        <button onclick="testEnvelopeSound()">🎵 Test Envelope Open Sound</button>
+        <button onclick="testSpecialPrizeSound()">✨ Test Special Prize Sound</button>
+        <button onclick="testGameEndSound()">🎉 Test Game End Sound</button>
+        
+        <h3>Audio Controls:</h3>
+        <button onclick="toggleAudio()">🔊 Toggle Audio On/Off</button>
+        <button onclick="showAudioStatus()">📊 Show Audio Status</button>
+        
+        <div class="status" id="test-results">
+            Click buttons above to test audio functionality
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // Initialize audio system
+        AudioManager.initialize().then(() => {
+            updateStatus('Audio system initialized successfully!');
+        }).catch(error => {
+            updateStatus('Audio initialization failed: ' + error.message);
+        });
+
+        function updateStatus(message) {
+            document.getElementById('audio-status').textContent = 'Audio Status: ' + message;
+        }
+
+        function testEnvelopeSound() {
+            AudioManager.playOpenEnvelopeSound();
+            document.getElementById('test-results').textContent = 'Played envelope open sound';
+        }
+
+        function testSpecialPrizeSound() {
+            // Test with a high prize amount to trigger special sound
+            const result = AudioManager.playSpecialPrizeSound(1000);
+            document.getElementById('test-results').textContent = 
+                result ? 'Played special prize sound' : 'Played regular sound (prize not high enough)';
+        }
+
+        function testGameEndSound() {
+            AudioManager.playGameEndSound();
+            document.getElementById('test-results').textContent = 'Played game end sound';
+        }
+
+        function toggleAudio() {
+            AudioManager.toggleSound();
+            const status = AudioManager.isAudioEnabled ? 'enabled' : 'disabled';
+            document.getElementById('test-results').textContent = 'Audio ' + status;
+        }
+
+        function showAudioStatus() {
+            const status = AudioManager.getAudioStatus();
+            document.getElementById('test-results').innerHTML = 
+                `<strong>Audio Status:</strong><br>
+                Enabled: ${status.isEnabled}<br>
+                Loaded: ${status.isLoaded}<br>
+                Context State: ${status.contextState}<br>
+                Has Real Audio Files: ${status.hasRealAudioFiles}`;
+        }
+    </script>
+</body>
+</html>
