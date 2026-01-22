@@ -15,6 +15,10 @@
             <h1>เกมสุ่มเปิดซองแดงอั่งเปาจีน</h1>
             <div class="settings-form">
                 <div class="form-group">
+                    <label for="player-name">ชื่อผู้เล่น:</label>
+                    <input type="text" id="player-name" maxlength="50" placeholder="กรอกชื่อของคุณ" required>
+                </div>
+                <div class="form-group">
                     <label for="envelope-count">จำนวนซองแดง:</label>
                     <input type="number" id="envelope-count" min="1" placeholder="กรอกจำนวนซอง">
                 </div>
@@ -85,6 +89,7 @@
                     <p id="completion-message" class="completion-message"></p>
                 </div>
                 <div class="restart-options">
+                    <button id="download-results-btn" class="secondary-btn">📥 ดาวน์โหลดผลการเล่น</button>
                     <button id="play-again-btn" class="primary-btn">🎮 เล่นอีกครั้ง</button>
                 </div>
             </div>

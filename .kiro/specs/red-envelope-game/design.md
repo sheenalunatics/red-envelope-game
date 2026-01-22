@@ -16,7 +16,8 @@ Red Envelope Game
 ├── Prize Calculator (คำนวณเงินรางวัลแบบสุ่ม)
 ├── Settings Manager (จัดการการตั้งค่าเกม)
 ├── Audio Manager (จัดการเสียง effects และการควบคุมเสียง)
-└── Animation Manager (จัดการ visual animations และ effects)
+├── Animation Manager (จัดการ visual animations และ effects)
+└── Data Manager (จัดการการบันทึกและอ่านข้อมูลผู้เล่น)
 ```
 
 ## Components and Interfaces
@@ -74,6 +75,15 @@ Red Envelope Game
   - `playGameEndAnimation(totalPrize)`: เล่น animation จบเกม
   - `stopAllAnimations()`: หยุด animations ทั้งหมด
 
+### Data Manager
+- **หน้าที่**: จัดการการบันทึกและอ่านข้อมูลผู้เล่น
+- **Methods**:
+  - `validatePlayerName(name)`: ตรวจสอบความถูกต้องของชื่อผู้เล่น
+  - `saveGameResult(playerName, totalPrize, gameDate)`: บันทึกผลการเล่นลงไฟล์
+  - `downloadGameResults()`: ดาวน์โหลดไฟล์ผลการเล่น
+  - `formatGameResult(playerName, totalPrize, gameDate)`: จัดรูปแบบข้อมูลสำหรับบันทึก
+  - `generateFileName()`: สร้างชื่อไฟล์สำหรับบันทึกข้อมูล
+
 ## Data Models
 
 ### GameSettings
@@ -82,7 +92,8 @@ Red Envelope Game
   envelopeCount: number,    // จำนวนซองแดง (จำนวนเต็มบวก)
   minPrize: number,         // เงินรางวัลต่ำสุด (จำนวนเต็มบวก)
   maxPrize: number,         // เงินรางวัลสูงสุด (จำนวนเต็มบวก >= minPrize)
-  soundEnabled: boolean     // การเปิด-ปิดเสียง
+  soundEnabled: boolean,    // การเปิด-ปิดเสียง
+  playerName: string        // ชื่อผู้เล่น (1-50 ตัวอักษร)
 }
 ```
 
@@ -105,7 +116,20 @@ Red Envelope Game
   envelopes: Envelope[],    // รายการซองแดงทั้งหมด
   totalPrize: number,       // เงินรางวัลรวม
   openedCount: number,      // จำนวนซองที่เปิดแล้ว
-  isAnimating: boolean      // สถานะการเล่น animation
+  isAnimating: boolean,     // สถานะการเล่น animation
+  playerName: string        // ชื่อผู้เล่นปัจจุบัน
+}
+```
+
+### GameResult
+```javascript
+{
+  playerName: string,       // ชื่อผู้เล่น
+  totalPrize: number,       // เงินรางวัลรวมที่ได้
+  gameDate: Date,           // วันที่และเวลาที่เล่น
+  envelopeCount: number,    // จำนวนซองที่เล่น
+  minPrize: number,         // เงินรางวัลต่ำสุดที่ตั้งไว้
+  maxPrize: number          // เงินรางวัลสูงสุดที่ตั้งไว้
 }
 ```
 
@@ -182,6 +206,14 @@ Red Envelope Game
 ### Property 15: Statistics display accuracy
 *For any* game state, the displayed statistics should correctly show the count of opened envelopes and remaining unopened envelopes
 **Validates: Requirements 5.5**
+
+### Property 16: Player name validation
+*For any* player name input, the system should accept only valid names with length between 1-50 characters and reject empty or invalid names
+**Validates: Requirements 6.2, 6.3**
+
+### Property 17: Game result data integrity
+*For any* completed game, the saved game result should contain accurate player name, total prize, and timestamp information
+**Validates: Requirements 6.4, 6.5**
 
 ## Error Handling
 

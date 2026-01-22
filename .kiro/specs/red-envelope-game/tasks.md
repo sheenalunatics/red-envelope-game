@@ -291,3 +291,82 @@
 
 
   - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 12. Implement player name input and data persistence
+
+
+
+
+  - [x] 12.1 Create Data Manager component
+
+
+    - Implement validatePlayerName() method
+    - Create saveGameResult() method
+    - Implement downloadGameResults() method
+    - Create formatGameResult() method
+    - _Requirements: 6.2, 6.4, 6.5_
+
+  - [x] 12.2 Write property test for player name validation
+
+
+    - **Property 16: Player name validation**
+    - **Validates: Requirements 6.2, 6.3**
+
+  - [x] 12.3 Write property test for game result data integrity
+
+
+    - **Property 17: Game result data integrity**
+    - **Validates: Requirements 6.4, 6.5**
+
+  - [x] 12.4 Update Settings Manager for player name
+
+
+    - Add player name field to settings validation
+    - Update getDefaultSettings() to include playerName
+    - Modify validateSettings() to check player name
+    - _Requirements: 6.1, 6.2, 6.3_
+
+  - [x] 12.5 Update UI Manager for player name input
+
+
+    - Add player name input field to settings screen
+    - Implement name validation UI feedback
+    - Update renderSettingsScreen() method
+    - _Requirements: 6.1, 6.3_
+
+  - [x] 12.6 Integrate data saving with game completion
+
+
+    - Update Game Controller to save results when game ends
+    - Add data download functionality to game summary
+    - Integrate Data Manager with existing game flow
+    - _Requirements: 6.4, 6.5_
+
+- [x] 13. Final integration and testing for new features
+
+
+
+
+  - [x] 13.1 Update all existing tests for new data models
+
+
+    - Modify existing property tests to include playerName
+    - Update GameSettings and GameState tests
+    - Ensure backward compatibility
+    - _Requirements: All_
+
+  - [x] 13.2 Write integration tests for data persistence
+
+
+    - Test complete flow from name input to data saving
+    - Test error handling for file operations
+    - Verify data format and integrity
+    - _Requirements: 6.1-6.5_
+
+  - [x] 13.3 Final validation and user acceptance testing
+
+
+    - Test complete user journey with name input
+    - Verify file download functionality
+    - Ensure all existing features still work
+    - _Requirements: All_
