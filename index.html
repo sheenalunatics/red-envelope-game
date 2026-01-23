@@ -88,10 +88,32 @@
                     </div>
                     <p id="completion-message" class="completion-message"></p>
                 </div>
+                <div id="envelope-list-container" class="envelope-list-container">
+                    <h3>📋 รายชื่อผู้เปิดซอง</h3>
+                    <div id="envelope-list" class="envelope-list">
+                        <!-- List will be generated here -->
+                    </div>
+                </div>
                 <div class="restart-options">
                     <button id="download-results-btn" class="secondary-btn">📥 ดาวน์โหลดผลการเล่น</button>
                     <button id="play-again-btn" class="primary-btn">🎮 เล่นอีกครั้ง</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for entering name before opening envelope -->
+    <div id="name-input-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>กรอกชื่อผู้เปิดซอง</h3>
+            <div class="modal-form-group">
+                <label for="opener-name-input">ชื่อผู้เปิดซอง:</label>
+                <input type="text" id="opener-name-input" maxlength="50" placeholder="กรอกชื่อของคุณ" autofocus>
+                <div id="opener-name-error" class="error-message"></div>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirm-open-btn" class="modal-btn primary">เปิดซอง</button>
+                <button id="cancel-open-btn" class="modal-btn secondary">ยกเลิก</button>
             </div>
         </div>
     </div>

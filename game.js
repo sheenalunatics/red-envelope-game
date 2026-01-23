@@ -18,6 +18,7 @@
  * @property {number} horseImageId - รหัสรูปม้าการ์ตูน
  * @property {boolean} isOpened - สถานะการเปิดซอง
  * @property {number} prizeAmount - จำนวนเงินรางวัล (เมื่อเปิดแล้ว)
+ * @property {string} openedBy - ชื่อผู้เปิดซอง (เมื่อเปิดแล้ว)
  * @property {Object} position - ตำแหน่งการแสดงผล
  * @property {number} position.x - ตำแหน่ง x
  * @property {number} position.y - ตำแหน่ง y
@@ -367,6 +368,7 @@ const EnvelopeGenerator = {
                 horseImageId: i % HORSE_CARTOONS.length,
                 isOpened: false,
                 prizeAmount: 0,
+                openedBy: null,
                 position: { x: 0, y: 0 }
             });
         }
@@ -671,6 +673,7 @@ const UIManager = {
         if (envelope.isOpened) {
             div.innerHTML = `
                 <div class="prize-amount">${envelope.prizeAmount} บาท</div>
+                <div class="opener-name">${envelope.openedBy || ''}</div>
             `;
         } else {
             div.innerHTML = `
@@ -858,6 +861,9 @@ const UIManager = {
         // Show completion message with encouragement
         this.showCompletionMessage(stats);
         
+        // Display list of who opened each envelope
+        this.displayEnvelopeList();
+        
         // Ensure restart buttons are visible and enabled
         this.enableRestartButtons();
         
@@ -865,6 +871,42 @@ const UIManager = {
         this.animateStatCards();
         
         GameState.phase = 'finished';
+    },
+
+    /**
+     * Display list of who opened each envelope
+     */
+    displayEnvelopeList() {
+        const listContainer = document.getElementById('envelope-list');
+        if (!listContainer) return;
+
+        const openedEnvelopes = GameState.envelopes.filter(env => env.isOpened);
+        
+        if (openedEnvelopes.length === 0) {
+            listContainer.innerHTML = '<p>ยังไม่มีซองที่เปิด</p>';
+            return;
+        }
+
+        // Sort by envelope ID to maintain order
+        openedEnvelopes.sort((a, b) => {
+            const aNum = parseInt(a.id.split('-')[1]);
+            const bNum = parseInt(b.id.split('-')[1]);
+            return aNum - bNum;
+        });
+
+        let html = '<div class="envelope-list-items">';
+        openedEnvelopes.forEach((envelope, index) => {
+            html += `
+                <div class="envelope-list-item">
+                    <span class="envelope-number">${index + 1}.</span>
+                    <span class="opener-name-list">${envelope.openedBy || 'ไม่ระบุชื่อ'}</span>
+                    <span class="prize-amount-list">${envelope.prizeAmount.toLocaleString()} บาท</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        listContainer.innerHTML = html;
     },
 
     /**
@@ -1736,6 +1778,119 @@ const AnimationManager = {
 };
 
 /**
+ * Name Input Manager
+ * จัดการ modal สำหรับกรอกชื่อก่อนเปิดซอง
+ */
+const NameInputManager = {
+    currentEnvelopeId: null,
+    resolvePromise: null,
+    rejectPromise: null,
+
+    /**
+     * Show name input modal and return promise with entered name
+     * @param {string} envelopeId - ID of envelope to open
+     * @returns {Promise<string>} Promise that resolves with the entered name
+     */
+    showNameInput(envelopeId) {
+        return new Promise((resolve, reject) => {
+            this.currentEnvelopeId = envelopeId;
+            this.resolvePromise = resolve;
+            this.rejectPromise = reject;
+
+            const modal = document.getElementById('name-input-modal');
+            const input = document.getElementById('opener-name-input');
+            const errorDiv = document.getElementById('opener-name-error');
+            const confirmBtn = document.getElementById('confirm-open-btn');
+            const cancelBtn = document.getElementById('cancel-open-btn');
+
+            // Clear previous values
+            input.value = '';
+            errorDiv.textContent = '';
+            input.classList.remove('error');
+
+            // Show modal
+            modal.classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+
+            // Handle modal background click
+            const handleModalClick = (e) => {
+                if (e.target === modal) {
+                    handleCancel();
+                }
+            };
+
+            // Handle confirm button
+            const handleConfirm = () => {
+                const name = input.value.trim();
+                if (!name) {
+                    errorDiv.textContent = 'กรุณากรอกชื่อก่อนเปิดซอง';
+                    input.classList.add('error');
+                    input.focus();
+                    return;
+                }
+
+                if (name.length > 50) {
+                    errorDiv.textContent = 'ชื่อต้องไม่เกิน 50 ตัวอักษร';
+                    input.classList.add('error');
+                    input.focus();
+                    return;
+                }
+
+                // Clean up event listeners
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+                input.removeEventListener('keypress', handleKeyPress);
+                input.removeEventListener('keydown', handleKeyDown);
+                modal.removeEventListener('click', handleModalClick);
+
+                // Hide modal and resolve
+                modal.classList.add('hidden');
+                this.currentEnvelopeId = null;
+                resolve(name);
+            };
+
+            // Handle cancel button
+            const handleCancel = () => {
+                // Clean up event listeners
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+                input.removeEventListener('keypress', handleKeyPress);
+                input.removeEventListener('keydown', handleKeyDown);
+                modal.removeEventListener('click', handleModalClick);
+
+                // Hide modal and reject
+                modal.classList.add('hidden');
+                this.currentEnvelopeId = null;
+                reject(new Error('User cancelled'));
+            };
+
+            // Handle Enter key
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirm();
+                }
+            };
+
+            // Handle Escape key (needs keydown, not keypress)
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleCancel();
+                }
+            };
+
+            // Add event listeners
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+            input.addEventListener('keypress', handleKeyPress);
+            input.addEventListener('keydown', handleKeyDown);
+            modal.addEventListener('click', handleModalClick);
+        });
+    }
+};
+
+/**
  * Game Controller
  * จัดการสถานะเกมหลัก และควบคุมการไหลของเกม
  */
@@ -1774,6 +1929,15 @@ const GameController = {
             return;
         }
 
+        // Show name input modal and wait for user to enter name
+        let openerName;
+        try {
+            openerName = await NameInputManager.showNameInput(envelopeId);
+        } catch (error) {
+            // User cancelled, don't open envelope
+            return;
+        }
+
         // Ensure audio context is ready for user interaction
         AudioManager.handleUserInteraction();
 
@@ -1789,6 +1953,7 @@ const GameController = {
         // Update envelope
         envelope.isOpened = true;
         envelope.prizeAmount = prizeAmount;
+        envelope.openedBy = openerName;
 
         // Update game state
         GameState.openedCount++;
@@ -1851,9 +2016,10 @@ const GameController = {
             envelopeElement.classList.remove('closed');
             envelopeElement.classList.add('opened');
             
-            // Update content to show prize amount
+            // Update content to show prize amount and opener name
             envelopeElement.innerHTML = `
                 <div class="prize-amount">${envelope.prizeAmount} บาท</div>
+                <div class="opener-name">${envelope.openedBy || ''}</div>
             `;
         }
     },
@@ -2772,21 +2938,39 @@ const DataManager = {
      */
     downloadGameResults() {
         try {
-            const storageKey = 'redEnvelopeGameResults';
-            const savedData = localStorage.getItem(storageKey);
-
-            if (!savedData) {
-                alert('ไม่มีข้อมูลผลการเล่นที่บันทึกไว้');
-                return false;
-            }
-
+            // Create detailed report with envelope information
+            let report = '=== สรุปผลการเล่นเกมซองแดงอั่งเปา ===\n\n';
+            
+            // Game summary
+            const stats = GameController.getGameStatistics();
+            report += `วันที่: ${new Date().toLocaleDateString('th-TH')}\n`;
+            report += `เวลา: ${new Date().toLocaleTimeString('th-TH')}\n`;
+            report += `ชื่อผู้เล่นหลัก: ${GameState.playerName || 'ไม่ระบุ'}\n`;
+            report += `จำนวนเงินรวม: ${stats.totalPrize.toLocaleString()} บาท\n`;
+            report += `จำนวนซองที่เปิด: ${stats.openedCount} ซอง\n`;
+            report += `เงินรางวัลเฉลี่ย: ${Math.round(stats.averagePrize).toLocaleString()} บาท\n\n`;
+            
+            // Detailed envelope list
+            const openedEnvelopes = GameState.envelopes.filter(env => env.isOpened);
+            openedEnvelopes.sort((a, b) => {
+                const aNum = parseInt(a.id.split('-')[1]);
+                const bNum = parseInt(b.id.split('-')[1]);
+                return aNum - bNum;
+            });
+            
+            report += '=== รายละเอียดผู้เปิดซอง ===\n';
+            report += 'ลำดับ,ชื่อผู้เปิดซอง,จำนวนเงิน (บาท)\n';
+            openedEnvelopes.forEach((envelope, index) => {
+                report += `${index + 1},${envelope.openedBy || 'ไม่ระบุชื่อ'},${envelope.prizeAmount.toLocaleString()}\n`;
+            });
+            
             // สร้างไฟล์และดาวน์โหลด
-            const blob = new Blob([savedData], { type: 'text/plain;charset=utf-8' });
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = this.generateFileName();
+            link.download = this.generateDetailedFileName();
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -2801,6 +2985,17 @@ const DataManager = {
             alert('เกิดข้อผิดพลาดในการดาวน์โหลดไฟล์');
             return false;
         }
+    },
+
+    /**
+     * สร้างชื่อไฟล์สำหรับรายงานละเอียด
+     * @returns {string} - ชื่อไฟล์
+     */
+    generateDetailedFileName() {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
+        return `red_envelope_detailed_${dateStr}_${timeStr}.txt`;
     },
 
     /**
