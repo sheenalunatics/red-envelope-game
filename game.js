@@ -9,7 +9,6 @@
  * @property {number} minPrize - เงินรางวัลต่ำสุด (จำนวนเต็มบวก)
  * @property {number} maxPrize - เงินรางวัลสูงสุด (จำนวนเต็มบวก >= minPrize)
  * @property {boolean} soundEnabled - การเปิด-ปิดเสียง
- * @property {string} playerName - ชื่อผู้เล่น (1-50 ตัวอักษร)
  */
 
 /**
@@ -33,7 +32,6 @@
  * @property {number} totalPrize - เงินรางวัลรวม
  * @property {number} openedCount - จำนวนซองที่เปิดแล้ว
  * @property {boolean} isAnimating - สถานะการเล่น animation
- * @property {string} playerName - ชื่อผู้เล่นปัจจุบัน
  */
 
 /**
@@ -84,20 +82,6 @@ const DataModelValidator = {
         // Validate soundEnabled
         if (typeof settings.soundEnabled !== 'boolean') {
             errors.push('soundEnabled must be a boolean');
-        }
-        
-        // Validate playerName
-        if (typeof settings.playerName !== 'string') {
-            errors.push('playerName must be a string');
-        } else {
-            const trimmed = settings.playerName.trim();
-            if (trimmed.length === 0) {
-                errors.push('playerName cannot be empty');
-            } else if (trimmed.length > 50) {
-                errors.push('playerName must be 50 characters or less');
-            } else if (/[<>:"/\\|?*\x00-\x1f,]/.test(trimmed)) {
-                errors.push('playerName contains invalid characters');
-            }
         }
         
         return {
@@ -258,8 +242,7 @@ const GameState = {
     envelopes: [],
     totalPrize: 0,
     openedCount: 0,
-    isAnimating: false,
-    playerName: ''
+    isAnimating: false
 };
 
 // Horse cartoon emojis for envelopes
@@ -271,14 +254,13 @@ const HORSE_CARTOONS = ['🐴', '🐎', '🦄', '🎠', '🐵', '🦓', '🐆', 
  */
 const SettingsManager = {
     /**
-     * Validate game settings including player name
+     * Validate game settings
      * @param {number} envelopeCount - จำนวนซองแดง
      * @param {number} minPrize - เงินรางวัลต่ำสุด
      * @param {number} maxPrize - เงินรางวัลสูงสุด
-     * @param {string} playerName - ชื่อผู้เล่น (optional)
      * @returns {Object} validation result
      */
-    validateSettings(envelopeCount, minPrize, maxPrize, playerName = null) {
+    validateSettings(envelopeCount, minPrize, maxPrize) {
         const errors = [];
         
         // Validate envelope count
@@ -297,14 +279,6 @@ const SettingsManager = {
         
         if (minPrize > maxPrize) {
             errors.push('กรุณากรอกช่วงเงินรางวัลที่ถูกต้อง (ค่าต่ำสุด ≤ ค่าสูงสุด)');
-        }
-        
-        // Validate player name if provided
-        if (playerName !== null) {
-            const nameValidation = DataManager.validatePlayerName(playerName);
-            if (!nameValidation.isValid) {
-                errors.push(nameValidation.error);
-            }
         }
         
         return {
@@ -329,8 +303,7 @@ const SettingsManager = {
         return this.validateSettings(
             settings.envelopeCount,
             settings.minPrize,
-            settings.maxPrize,
-            settings.playerName
+            settings.maxPrize
         );
     },
 
@@ -340,11 +313,10 @@ const SettingsManager = {
      */
     getDefaultSettings() {
         return {
-            envelopeCount: 10,
-            minPrize: 10,
-            maxPrize: 100,
-            soundEnabled: true,
-            playerName: ''
+            envelopeCount: 5,
+            minPrize: 300,
+            maxPrize: 500,
+            soundEnabled: true
         };
     }
 };
@@ -467,14 +439,9 @@ const UIManager = {
         const defaults = SettingsManager.getDefaultSettings();
         
         // Only set defaults if fields are empty
-        const playerNameInput = document.getElementById('player-name');
         const envelopeCountInput = document.getElementById('envelope-count');
         const minPrizeInput = document.getElementById('min-prize');
         const maxPrizeInput = document.getElementById('max-prize');
-        
-        if (playerNameInput && !playerNameInput.value) {
-            playerNameInput.value = defaults.playerName;
-        }
         
         if (envelopeCountInput && !envelopeCountInput.value) {
             envelopeCountInput.value = defaults.envelopeCount;
@@ -494,25 +461,12 @@ const UIManager = {
      * @returns {Object} validation result with detailed field errors
      */
     validateSettingsForm() {
-        const playerName = document.getElementById('player-name').value.trim();
         const envelopeCount = parseInt(document.getElementById('envelope-count').value);
         const minPrize = parseInt(document.getElementById('min-prize').value);
         const maxPrize = parseInt(document.getElementById('max-prize').value);
         
         const fieldErrors = {};
         let hasErrors = false;
-        
-        // Check player name
-        if (!playerName) {
-            fieldErrors.playerName = 'กรุณากรอกชื่อผู้เล่น';
-            hasErrors = true;
-        } else {
-            const nameValidation = DataManager.validatePlayerName(playerName);
-            if (!nameValidation.isValid) {
-                fieldErrors.playerName = nameValidation.error;
-                hasErrors = true;
-            }
-        }
         
         // Check for empty fields
         if (!document.getElementById('envelope-count').value.trim()) {
@@ -548,7 +502,7 @@ const UIManager = {
         return {
             isValid: !hasErrors,
             fieldErrors: fieldErrors,
-            values: { playerName, envelopeCount, minPrize, maxPrize }
+            values: { envelopeCount, minPrize, maxPrize }
         };
     },
 
@@ -566,9 +520,6 @@ const UIManager = {
             let inputElement;
             
             switch (fieldName) {
-                case 'playerName':
-                    inputElement = document.getElementById('player-name');
-                    break;
                 case 'envelopeCount':
                     inputElement = document.getElementById('envelope-count');
                     break;
@@ -819,22 +770,6 @@ const UIManager = {
         
         // Get detailed game statistics
         const stats = GameController.getGameStatistics();
-        
-        // Save game result to file
-        if (GameState.playerName && GameState.settings) {
-            const success = DataManager.saveGameResult(
-                GameState.playerName,
-                totalPrize,
-                new Date(),
-                GameState.settings
-            );
-            
-            if (success) {
-                console.log('Game result saved successfully');
-            } else {
-                console.warn('Failed to save game result');
-            }
-        }
         
         // Update summary display with comprehensive statistics
         const finalTotalElement = document.getElementById('final-total');
@@ -1908,7 +1843,6 @@ const GameController = {
         }
 
         GameState.settings = settings;
-        GameState.playerName = settings.playerName || '';
         GameState.envelopes = EnvelopeGenerator.generateEnvelopes(settings.envelopeCount);
         GameState.totalPrize = 0;
         GameState.openedCount = 0;
@@ -2038,7 +1972,6 @@ const GameController = {
         GameState.totalPrize = 0;
         GameState.openedCount = 0;
         GameState.isAnimating = false;
-        GameState.playerName = '';
 
         // Reset UI to settings screen
         UIManager.renderSettingsScreen();
@@ -2056,8 +1989,7 @@ const GameController = {
             envelopes: GameState.envelopes.map(envelope => ({ ...envelope })),
             totalPrize: GameState.totalPrize,
             openedCount: GameState.openedCount,
-            isAnimating: GameState.isAnimating,
-            playerName: GameState.playerName
+            isAnimating: GameState.isAnimating
         };
     },
 
@@ -2563,7 +2495,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (formValidation.isValid) {
             UIManager.clearFieldErrors();
             const settings = {
-                playerName: formValidation.values.playerName,
                 envelopeCount: formValidation.values.envelopeCount,
                 minPrize: formValidation.values.minPrize,
                 maxPrize: formValidation.values.maxPrize,
@@ -2851,28 +2782,6 @@ const DataManager = {
     },
 
     /**
-     * จัดรูปแบบข้อมูลผลการเล่นสำหรับบันทึก
-     * @param {string} playerName - ชื่อผู้เล่น
-     * @param {number} totalPrize - เงินรางวัลรวม
-     * @param {Date} gameDate - วันที่และเวลาที่เล่น
-     * @param {object} gameSettings - การตั้งค่าเกม
-     * @returns {string} - ข้อมูลในรูปแบบ CSV
-     */
-    formatGameResult(playerName, totalPrize, gameDate, gameSettings = {}) {
-        const date = gameDate.toLocaleDateString('th-TH');
-        const time = gameDate.toLocaleTimeString('th-TH');
-        const envelopeCount = gameSettings.envelopeCount || 0;
-        const minPrize = gameSettings.minPrize || 0;
-        const maxPrize = gameSettings.maxPrize || 0;
-        
-        // Escape player name for CSV (replace quotes with double quotes and wrap in quotes)
-        const escapedPlayerName = `"${playerName.replace(/"/g, '""')}"`;
-        
-        // รูปแบบ CSV: วันที่, เวลา, ชื่อผู้เล่น, จำนวนเงินรวม, จำนวนซอง, เงินรางวัลต่ำสุด, เงินรางวัลสูงสุด
-        return `${date},${time},${escapedPlayerName},${totalPrize},${envelopeCount},${minPrize},${maxPrize}`;
-    },
-
-    /**
      * สร้างชื่อไฟล์สำหรับบันทึกข้อมูล
      * @returns {string} - ชื่อไฟล์
      */
@@ -2880,56 +2789,6 @@ const DataManager = {
         const now = new Date();
         const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
         return `red_envelope_game_results_${dateStr}.txt`;
-    },
-
-    /**
-     * บันทึกผลการเล่นลงไฟล์ (ดาวน์โหลดไฟล์)
-     * @param {string} playerName - ชื่อผู้เล่น
-     * @param {number} totalPrize - เงินรางวัลรวม
-     * @param {Date} gameDate - วันที่และเวลาที่เล่น
-     * @param {object} gameSettings - การตั้งค่าเกม
-     * @returns {boolean} - สำเร็จหรือไม่
-     */
-    saveGameResult(playerName, totalPrize, gameDate = new Date(), gameSettings = {}) {
-        try {
-            // ตรวจสอบความถูกต้องของข้อมูล
-            const nameValidation = this.validatePlayerName(playerName);
-            if (!nameValidation.isValid) {
-                console.error('Invalid player name:', nameValidation.error);
-                return false;
-            }
-
-            if (typeof totalPrize !== 'number' || totalPrize < 0) {
-                console.error('Invalid total prize:', totalPrize);
-                return false;
-            }
-
-            // อ่านข้อมูลเก่าจาก localStorage (ถ้ามี)
-            let existingData = '';
-            const storageKey = 'redEnvelopeGameResults';
-            const savedData = localStorage.getItem(storageKey);
-            
-            if (savedData) {
-                existingData = savedData + '\n';
-            } else {
-                // เพิ่ม header ถ้าเป็นครั้งแรก
-                existingData = 'วันที่,เวลา,ชื่อผู้เล่น,จำนวนเงินรวม,จำนวนซอง,เงินรางวัลต่ำสุด,เงินรางวัลสูงสุด\n';
-            }
-
-            // เพิ่มข้อมูลใหม่
-            const newResult = this.formatGameResult(playerName, totalPrize, gameDate, gameSettings);
-            const updatedData = existingData + newResult;
-
-            // บันทึกลง localStorage
-            localStorage.setItem(storageKey, updatedData);
-
-            console.log('Game result saved successfully');
-            return true;
-
-        } catch (error) {
-            console.error('Error saving game result:', error);
-            return false;
-        }
     },
 
     /**
@@ -2945,7 +2804,6 @@ const DataManager = {
             const stats = GameController.getGameStatistics();
             report += `วันที่: ${new Date().toLocaleDateString('th-TH')}\n`;
             report += `เวลา: ${new Date().toLocaleTimeString('th-TH')}\n`;
-            report += `ชื่อผู้เล่นหลัก: ${GameState.playerName || 'ไม่ระบุ'}\n`;
             report += `จำนวนเงินรวม: ${stats.totalPrize.toLocaleString()} บาท\n`;
             report += `จำนวนซองที่เปิด: ${stats.openedCount} ซอง\n`;
             report += `เงินรางวัลเฉลี่ย: ${Math.round(stats.averagePrize).toLocaleString()} บาท\n\n`;
